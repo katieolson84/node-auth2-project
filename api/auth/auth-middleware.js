@@ -82,7 +82,7 @@ const validateRoleName = (req, res, next) => {
   const role = req.body.role_name.trim();
 
     if (!req.body.role_name || role === '') {
-      res.role_id = 3 
+       res.role_name = 'student' 
       } else if (role === 'admin') {
         res.status(422).json({ message: 'Role name can not be admin' });
       } else if (role.length > 32) {
