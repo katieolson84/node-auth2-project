@@ -4,6 +4,7 @@ const User = require('../users/users-model');
 
 
 const restricted = (req, res, next) => {
+  // console.log('RESTRICTED req.authorization: ', req.headers.authorization)
   const token = req.headers.authorization
 
   if(!token) {
@@ -13,7 +14,7 @@ const restricted = (req, res, next) => {
       if(err) {
         res.status(401).json({message: 'Token invalid'})
       }else {
-        req.decodedToken = decoded
+        req.decodedJwt = decoded;
         next()
       }
     })
@@ -37,10 +38,11 @@ const restricted = (req, res, next) => {
 
 
 const only = role_name => (req, res, next) => {
-  if(req.decodedToken.role === role_name){
-    next()
+  const decodedToken = req.decodedJwt
+  if(decodedToken.role_name !== role_name){
+    res.staus(403).json({message: 'This is not for you'})
   }else{
-      res.staus(403).json({message: 'This is not for you'})
+    next()
   }
 };
   /*
@@ -55,18 +57,14 @@ const only = role_name => (req, res, next) => {
   */
 
 const checkUsernameExists = (req, res, next) => {
+  const { username } = req.body;
+  const checkUser = User.findBy({ username }).first();
+  if (checkUser.username === username) {
+    res.status(401).json({ message: 'Invalid credentials' });
+  } else {
+    next();
+  }
 
-  User.findBy(req.body.username)
-      .then(user => {
-        if (user.length === 0) {
-          res.status(401).json({ message: 'Invalid credentials' });
-        } else {
-          next();
-        }
-      })
-      .catch(err => {
-        next(err);
-      })
 }
   /*
     If the username in req.body does NOT exist in the database
@@ -77,19 +75,21 @@ const checkUsernameExists = (req, res, next) => {
   */
 
 const validateRoleName = (req, res, next) => {
+  const role = req.body.role_name;
+  if (!role || role.trim() === '') {
+    req.body.role_name = 'student';
+    next();
+  } else if (role.trim() === 'admin') {
+    res.status(422).json({ message: 'Role name can not be admin' });
+  } else if (role.trim().length > 32) {
+    res
+      .status(422)
+      .json({ message: 'Role name can not be longer than 32 chars' });
+  } else {
+    req.body.role_name = role.trim();
+    next();
+  }
 
-  const role = req.body.role_name.trim();
-
-    if (!req.body.role_name || role === '') {
-       res.role_name = 'student' 
-      } else if (role === 'admin') {
-        res.status(422).json({ message: 'Role name can not be admin' });
-      } else if (role.length > 32) {
-        res.status(422).json({ message: 'Role name can not be longer than 32 chars' });
-      } else {
-        req.role_name = role;
-        next();
-      }
 }
 
   /*

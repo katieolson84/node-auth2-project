@@ -8,49 +8,27 @@ const User = require('../users/users-model');
 
 
 router.post("/register", validateRoleName, (req, res, next) => {
-    // User.add(req.body)
-    // .then(registered => {
-    //   res.status(201).json({registered})
-    // })
-    // .catch(next)
+  
     const credentials = req.body
-    if(credentials){
-    const rounds = process.env.BCRYPT_ROUNDS || 8
-    const hash = bcrypt.hashSync(credentials.password, )
-    credentials.password = hash
 
-    User.add(credentials)
-      .then(user => {
-        res.status(201).json({user})
-      })
-      .catch(err => {
-        res.status(500).json({message: err.message})
-      })
-    }else{
-      res.status(400).json({message: 'must provide username and password'})
-    }
+      if(credentials){
+        const rounds = process.env.BCRYPT_ROUNDS || 8
+        const hash = bcrypt.hashSync(credentials.password, rounds )
+        
+        credentials.password = hash
+
+        User.add(credentials)
+        .then(user => {
+          res.status(201).json({user})
+        })
+        .catch(err => {
+          res.status(500).json({message: err.message, stack: err.stack})
+        })
+      }else{
+        res.status(400).json({message: 'Please provide username and password, password must be alphanumeric'})
+      }
 
   })
-
-//   try{
-//     const { username, password, role_name } = req.body
-//     const user = await User.findBy({username})
-//     if(user) {
-//       return res.status(409).json({message: 'Username is taken'})
-//     }else{
-//       next()
-//     }
-//     const newUser = await User.add({
-//       username, 
-//       password: await bcrypt.hash(password, 10), 
-//       role_name
-//     })
-//     res.status(201).json(newUser)
-//   }catch(e){
-//     next(e)
-//   }
-// })
-
   /**
     [POST] /api/auth/register { "username": "anna", "password": "1234", "role_name": "angel" }
 
@@ -63,8 +41,6 @@ router.post("/register", validateRoleName, (req, res, next) => {
     }
    */
 
-
-// !THIS WORKS
 router.post("/login", checkUsernameExists, (req, res, next) => {
   const { username, password } = req.body;
 
