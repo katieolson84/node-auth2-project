@@ -18,6 +18,7 @@ server.get('/', (req,res) => {
   res.json({api: "up"})
 })
 
+// middleware for errors
 server.use((err, req, res, next) => { // eslint-disable-line
   res.status(500).json({
     message: err.message,
